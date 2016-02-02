@@ -4,6 +4,7 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var flash = require('connect-flash');
 
 // environment
 var env = require('node-env-file');
@@ -16,12 +17,19 @@ var dbConfig = require('./db.js');
 var mongoose = require('mongoose');
 mongoose.connect(dbConfig.url);
 
+app.use(flash());
+
 // passport
 var passport = require('passport');
 var expressSession = require('express-session');
 app.use(expressSession({secret: process.env.SESSION_SECRET}));
 app.use(passport.initialize());
 app.use(passport.session());
+
+passport.serializeUser((user, done) => done(null, user._id));
+passport.deserializeUser(id, (id, done) => {
+  User.findById(id, (err, user) => done(err, user));
+});
 
 var routes = require('./routes/index');
 
