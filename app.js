@@ -1,3 +1,4 @@
+require('babel-core/register');
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -5,7 +6,11 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var flash = require('connect-flash');
-
+import init from './passport/init';
+var test = () => {
+  console.log('yes');
+};
+test();
 // environment
 var env = require('node-env-file');
 env(__dirname + '/.env');
@@ -26,10 +31,8 @@ app.use(expressSession({secret: process.env.SESSION_SECRET}));
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.serializeUser((user, done) => done(null, user._id));
-passport.deserializeUser(id, (id, done) => {
-  User.findById(id, (err, user) => done(err, user));
-});
+const initPassport = require('./passport/init');
+initPassport(passport);
 
 var routes = require('./routes/index');
 
