@@ -15,25 +15,33 @@ module.exports = function(passport){
 
 	/* GET login page. */
 	router.get('/', function(req, res) {
-    	// Display the Login page with any flash message, if any
-		res.render('index', { message: req.flash('message') });
+    const data = req.isAuthenticated() ? { user: req.user } : {};
+		res.render('index', data);
+	});
+
+	router.get('/login', function(req, res) {
+		if (req.isAuthenticated()) res.redirect('/');
+
+		res.render('login', { message: req.flash('message') });
 	});
 
 	/* Handle Login POST */
 	router.post('/login', passport.authenticate('login', {
-		successRedirect: '/home',
-		failureRedirect: '/',
+		successRedirect: '/',
+		failureRedirect: '/login',
 		failureFlash : true  
 	}));
 
 	/* GET Registration Page */
 	router.get('/signup', function(req, res){
+		if (req.isAuthenticated()) res.redirect('/');
+
 		res.render('register',{message: req.flash('message')});
 	});
 
 	/* Handle Registration POST */
 	router.post('/signup', passport.authenticate('signup', {
-		successRedirect: '/home',
+		successRedirect: '/',
 		failureRedirect: '/signup',
 		failureFlash : true  
 	}));

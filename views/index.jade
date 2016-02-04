@@ -1,13 +1,19 @@
 extends layout
 
 block content
+	div this is the home page
+	
 
-	form(class='form-signin', action='/login', method='POST')
-		input(type='text', name='username' class='form-control', placeholder='Email',required, autofocus)
-		input(type='password', name='password' class='form-control', placeholder='Password', required)
-		button(class='btn btn-lg btn-primary btn-block', type='submit') Sign in
-		
-	a(href='/signup', class='text-center new-account') Create an account
-	#message
-		if message
-			h1.text-center.error-message #{message}
+	if user
+		#user
+			h1.text-center.login-title Welcome #{user.firstName}. Check your details below:
+				div.signup-wall
+					ul.user-details
+						li Username ---> #{user.username}
+						li Email    ---> #{user.email}
+						li First Name ---> #{user.firstName} 
+						li Last Name ---> #{user.lastName}
+				a(href='/signout', class='text-center new-account') Sign Out
+	else 
+		a(href='/login') login
+		a(href='/signup') signup
