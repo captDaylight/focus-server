@@ -25,7 +25,7 @@ module.exports = function(passport) {
 			todo.save(function (err) {
 				if (err) return res.send(err);
 
-				return res.json({message: 'todo created'});
+				return res.json({message: 'todo creatededede'});
 			});
 		})
 		.get(function (req, res) {
