@@ -14,9 +14,8 @@ module.exports = function(passport) {
 			// create a todo
 			var todo = new Todo();
 			var body = req.body;
-
+			console.log(body);
 			todo.todo = body.todo;
-			todo.id = body.id;
 			todo.created = body.created;
 			todo.completed = body.completed;
 			todo.workingOn = body.workingOn;

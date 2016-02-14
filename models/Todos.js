@@ -3,7 +3,6 @@ var Schema = mongoose.Schema;
 
 var TodosSchema = Schema({
 	todo: String,
-	id: String,
 	created: Date,
 	completed: Number,
 	workingOn: Number,
