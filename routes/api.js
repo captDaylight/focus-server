@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
+var bCrypt = require('bcrypt-nodejs');
 var Todo = require('../models/Todos');
+var User = require('../models/Users');
 
 module.exports = function(passport) {
 	
@@ -8,13 +10,57 @@ module.exports = function(passport) {
 		res.json({message: 'OH THIS IS THE API'}); 
 	});
 
+	// Create User
+	router.route('/user')
+		.post(function (req,res) {
+			User.findOne({'email': req.body.email}, function (err, user) {
+				if (err) return res.send(err);
+
+				if (user) {
+					// user already exists
+					return res.json({message: 'Email already in use'});
+
+				} else {
+					// create user
+					var user = new User();
+					var body = req.body;
+					var salt = bCrypt.genSaltSync(10);
+
+					user.email = body.email;
+					user.password = bCrypt.hashSync(body.password, salt, null);
+					user.name = body.name;
+					user.admin = body.admin;
+
+					user.save(function(err) {
+						if (err) return res.send(err);
+
+						return res.json({message: user});
+					});
+				}
+			});
+		});
+
+	router.route('/authenticate')
+		.post(function (req,res) {
+			User.findOne({'email': req.body.email}, function (err, user) {
+				if (err) return res.send(err);
+
+				if (!user) {
+					res.json({message: 'User not found'});
+				} else {
+					
+				}
+			});
+		});
+
+
 	// TODOS
 	router.route('/todos')
 		.post(function (req, res) {
 			// create a todo
 			var todo = new Todo();
 			var body = req.body;
-			console.log(body);
+
 			todo.todo = body.todo;
 			todo.created = body.created;
 			todo.completed = body.completed;
