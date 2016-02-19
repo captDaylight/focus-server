@@ -40,10 +40,10 @@ app.use(flash());
 // var initPassport = require('./passport/init');
 // initPassport(passport);
 
-var routes = require('./routes/index')(passport);
+var routes = require('./routes/index');
 app.use('/', routes);
 
-var apiRoutes = require('./routes/api')(passport);
+var apiRoutes = require('./routes/api');
 app.use('/api', apiRoutes);
 
 /// catch 404 and forward to error handler
