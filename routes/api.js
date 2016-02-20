@@ -4,7 +4,9 @@ var bCrypt = require('bcrypt-nodejs');
 var jwt = require('jsonwebtoken');
 var Todo = require('../models/Todos');
 var User = require('../models/Users');
-	
+
+var secret = process.env.SUPER_SECRET;
+
 router.get('/', function(req, res) {
 	res.json({message: 'OH THIS IS THE API'}); 
 });
@@ -14,7 +16,7 @@ function getUserAndToken(user) {
 		id: user._id,
 		email: user.email					
 	}
-	var token = jwt.sign(newUser, process.env.SUPER_SECRET, {
+	var token = jwt.sign(newUser, secret, {
     expiresInMinutes: 1440 // expires in 24 hours
   });
 
@@ -73,6 +75,33 @@ router.route('/authenticate')
 			return res.json(getUserAndToken(user));
 		});
 	});
+
+// route middleware to verify a token
+apiRoutes.use(function(req, res, next) {
+  // check header or url parameters or post parameters for token
+  var token = req.body.token || req.query.token || req.headers['x-access-token'];
+
+  // decode token
+  if (token) {
+    // verifies secret and checks exp
+    jwt.verify(token, secret, function(err, decoded) {      
+      if (err) {
+        return res.json({ 
+        	success: false, 
+        	message: 'Failed to authenticate token.' 
+        });
+      } else {
+        req.decoded = decoded;    
+        next();
+      }
+    });
+  } else {
+    return res.status(403).send({ 
+        success: false, 
+        message: 'No token provided.' 
+    });
+  }
+});
 
 // TODOS
 router.route('/todos')
