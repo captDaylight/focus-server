@@ -26,7 +26,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 var flash = require('connect-flash');
 app.use(flash());
-console.log('SUPER SECRET', process.env.SUPER_SECRET);
+
 var routes = require('./routes/index');
 app.use('/', routes);
 

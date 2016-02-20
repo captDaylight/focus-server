@@ -1,12 +1,29 @@
 var express = require('express');
 var router = express.Router();
 var bCrypt = require('bcrypt-nodejs');
+var jwt = require('jsonwebtoken');
 var Todo = require('../models/Todos');
 var User = require('../models/Users');
 	
 router.get('/', function(req, res) {
 	res.json({message: 'OH THIS IS THE API'}); 
 });
+
+function getUserAndToken(user) {
+	var newUser = {
+		id: user._id,
+		email: user.email					
+	}
+	var token = jwt.sign(newUser, process.env.SUPER_SECRET, {
+    expiresInMinutes: 1440 // expires in 24 hours
+  });
+
+  return {
+	  success: true,
+	  token: token,
+	  user: newUser
+	}
+}
 
 // Create User
 router.route('/user')
@@ -32,8 +49,8 @@ router.route('/user')
 				user.save(function(err) {
 					if (err) return res.send(err);
 
-					// todo return token and abrieviated user
-					return res.json({success: true, user});
+	        // return the information including token as JSON
+	        return res.json(getUserAndToken(user));
 				});
 			}
 		});
@@ -53,7 +70,7 @@ router.route('/authenticate')
 			}
 
 			// TODO return token and abrieviated user
-			return res.json({success: true, user});
+			return res.json(getUserAndToken(user));
 		});
 	});
 
