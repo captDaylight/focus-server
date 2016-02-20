@@ -77,10 +77,10 @@ router.route('/authenticate')
 	});
 
 // route middleware to verify a token
-apiRoutes.use(function(req, res, next) {
+router.use(function(req, res, next) {
   // check header or url parameters or post parameters for token
   var token = req.body.token || req.query.token || req.headers['x-access-token'];
-
+  console.log('token', req.body, token);
   // decode token
   if (token) {
     // verifies secret and checks exp
@@ -119,7 +119,7 @@ router.route('/todos')
 		todo.save(function (err) {
 			if (err) return res.send(err);
 
-			return res.json({message: 'todo creatededede'});
+			return res.json({success: true, todo: todo});
 		});
 	})
 	.get(function (req, res) {
