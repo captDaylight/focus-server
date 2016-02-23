@@ -4,6 +4,7 @@ var bCrypt = require('bcrypt-nodejs');
 var jwt = require('jsonwebtoken');
 var Todo = require('../models/Todos');
 var User = require('../models/Users');
+var Website = require('../models/Websites');
 
 var secret = process.env.SUPER_SECRET;
 
@@ -102,6 +103,24 @@ router.use(function(req, res, next) {
     });
   }
 });
+
+router.route('/websites')
+	.post(function (req, res) {
+		var website = new Website();
+		var body = req.body;
+
+		website.name = body.name;
+		website.favicon = body.favicon;
+
+		website.save(function (err) {
+			if (err) return res.send(err);
+
+			return res.json({success: true, website: website});
+		})
+	})
+	.get(function (req, res) {
+
+	})
 
 // TODOS
 router.route('/todos')
