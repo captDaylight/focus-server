@@ -60,7 +60,7 @@ router.route('/user')
 	});
 
 router.route('/authenticate')
-	.post(function (req,res) {
+	.post(function (req, res) {
 		User.findOne({'email': req.body.email}, function (err, user) {
 			if (err) return res.send(err);
 
@@ -104,30 +104,46 @@ router.use(function(req, res, next) {
   }
 });
 
+
 router.route('/websites')
 	.post(function (req, res) {
-		console.log('WEBSITE:', req.decoded);
+		var userEmail = req.decoded.email;
 		Website.findOne({name: req.body.name}, function (err, website) {
 			if (err) return res.send(err);
-			if (website) {
-				// user already exists
-				console.log('already existed');
-				res.json({success: true, website: website});
+			
+			var queryWebsite = website;
 
-			} else {
-				console.log('creating new');
-				var website = new Website();
-				var body = req.body;
+			return User.findOne({'email': userEmail}, function (err, user) {
+				if (err) return res.send(err);
 
-				website.name = body.name;
-				website.favicon = body.favicon;
+				if (!user) {
+					return res.json({message: 'User not found with ' + req.body.email});
+				}
+				console.log('website again',queryWebsite);
+				if (queryWebsite) {
+					// user already exists
+					console.log('already existed', user);
+					res.json({success: true, website: queryWebsite});
 
-				website.save(function (err) {
-					if (err) return res.send(err);
+				} else {
+					console.log('new website', user);
+					var website = new Website();
+					var body = req.body;
 
-					return res.json({success: true, website: website});
-				});
-			}
+					website.name = body.name;
+					website.favicon = body.favicon;
+
+					website.save(function (err) {
+						if (err) return res.send(err);
+
+						return res.json({success: true, website: website});
+					});
+				}
+
+				return user
+			});
+
+
 		});
 	})
 	.get(function (req, res) {
