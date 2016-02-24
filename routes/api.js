@@ -106,20 +106,35 @@ router.use(function(req, res, next) {
 
 router.route('/websites')
 	.post(function (req, res) {
-		var website = new Website();
-		var body = req.body;
-
-		website.name = body.name;
-		website.favicon = body.favicon;
-
-		website.save(function (err) {
+		Website.findOne({name: req.body.name}, function (err, website) {
 			if (err) return res.send(err);
+			if (website) {
+				// user already exists
+				console.log('already existed');
+				res.json({success: true, website: website});
 
-			return res.json({success: true, website: website});
-		})
+			} else {
+				console.log('creating new');
+				var website = new Website();
+				var body = req.body;
+
+				website.name = body.name;
+				website.favicon = body.favicon;
+
+				website.save(function (err) {
+					if (err) return res.send(err);
+
+					return res.json({success: true, website: website});
+				});
+			}
+		});
 	})
 	.get(function (req, res) {
+		Website.find(function (err, websites) {
+			if (err) return res.send(err);
 
+			return res.json({success: true, websites: websites});
+		})
 	})
 
 // TODOS
