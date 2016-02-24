@@ -81,7 +81,7 @@ router.route('/authenticate')
 router.use(function(req, res, next) {
   // check header or url parameters or post parameters for token
   var token = req.body.token || req.query.token || req.headers['x-access-token'];
-  console.log('token', req.body, token);
+  console.log('token?', req.body, token);
   // decode token
   if (token) {
     // verifies secret and checks exp
@@ -106,6 +106,7 @@ router.use(function(req, res, next) {
 
 router.route('/websites')
 	.post(function (req, res) {
+		console.log('WEBSITE:', req.decoded);
 		Website.findOne({name: req.body.name}, function (err, website) {
 			if (err) return res.send(err);
 			if (website) {
