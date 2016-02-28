@@ -105,6 +105,13 @@ router.use(function(req, res, next) {
 });
 
 
+function addWebsiteToUser(res, user, id) {
+	console.log(user.websites, typeof id);
+	user.websites = user.websites.concat(id);
+	user.save(function(err, user) {
+		if (err) res.send(err);
+	});
+}
 router.route('/websites')
 	.post(function (req, res) {
 		var userEmail = req.decoded.email;
@@ -119,14 +126,12 @@ router.route('/websites')
 				if (!user) {
 					return res.json({message: 'User not found with ' + req.body.email});
 				}
-				console.log('website again',queryWebsite);
 				if (queryWebsite) {
-					// user already exists
-					console.log('already existed', user);
+					// website already exists
+					addWebsiteToUser(res, user, queryWebsite._id);
 					res.json({success: true, website: queryWebsite});
-
+					
 				} else {
-					console.log('new website', user);
 					var website = new Website();
 					var body = req.body;
 
@@ -135,23 +140,30 @@ router.route('/websites')
 
 					website.save(function (err) {
 						if (err) return res.send(err);
-
+						addWebsiteToUser(res, user, website._id);
 						return res.json({success: true, website: website});
 					});
 				}
 
 				return user
 			});
-
-
 		});
 	})
 	.get(function (req, res) {
-		Website.find(function (err, websites) {
+		User.findOne({'email': req.decoded.email}, function (err, user) {
 			if (err) return res.send(err);
 
-			return res.json({success: true, websites: websites});
-		})
+			if (!user) {
+				return res.json({message: 'User not found with ' + req.body.email});
+			}
+
+			Website.find({'_id': {
+				$in: user.websites
+			}}, function(err, websites) {
+				if (err) return res.send(err);
+				return res.json({success: true, websites: websites});
+			});
+		});
 	})
 
 // TODOS
