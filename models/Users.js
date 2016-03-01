@@ -7,6 +7,7 @@ var UserSchema = Schema({
 	name: String,
 	admin: Boolean,
 	websites: [String],
+	todos: [],
 });
 
 module.exports = mongoose.model('Users', UserSchema);

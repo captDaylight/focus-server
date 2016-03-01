@@ -18,7 +18,7 @@ function getUserAndToken(user) {
 		email: user.email					
 	}
 	var token = jwt.sign(newUser, secret, {
-    expiresInMinutes: 1440 // expires in 24 hours
+    expiresInMinutes: 900000000 // almost never expires
   });
 
   return {
