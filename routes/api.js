@@ -2,9 +2,9 @@ var express = require('express');
 var router = express.Router();
 var bCrypt = require('bcrypt-nodejs');
 var jwt = require('jsonwebtoken');
-var Todo = require('../models/Todos');
+// var Todo = require('../models/Todos');
 var User = require('../models/Users');
-var Website = require('../models/Websites');
+// var Website = require('../models/Websites');
 
 var secret = process.env.SUPER_SECRET;
 
@@ -32,32 +32,38 @@ module.exports = function(db) {
 	// Create User
 	router.route('/user')
 		.post(function (req,res) {
-			User.findOne({'email': req.body.email}, function (err, user) {
+			var users = db.collection('users')
+			users.findOne({'email': req.body.email}, function(err, result) {
+				console.log('here?', err);
 				if (err) return res.send(err);
-
-				if (user) {
-					// user already exists
-					return res.json({message: 'Email already in use'});
-
-				} else {
-					// create user
-					var user = new User();
-					var body = req.body;
-					var salt = bCrypt.genSaltSync(10);
-
-					user.email = body.email;
-					user.password = bCrypt.hashSync(body.password, salt, null);
-					user.name = body.name;
-					user.admin = body.admin;
-
-					user.save(function(err) {
-						if (err) return res.send(err);
-
-		        // return the information including token as JSON
-		        return res.json(getUserAndToken(user));
-					});
-				}
+				console.log('result',result);
 			});
+			// User.findOne({'email': req.body.email}, function (err, user) {
+			// 	if (err) return res.send(err);
+
+			// 	if (user) {
+			// 		// user already exists
+			// 		return res.json({message: 'Email already in use'});
+
+			// 	} else {
+			// 		// create user
+			// 		var user = new User();
+			// 		var body = req.body;
+			// 		var salt = bCrypt.genSaltSync(10);
+
+			// 		user.email = body.email;
+			// 		user.password = bCrypt.hashSync(body.password, salt, null);
+			// 		user.name = body.name;
+			// 		user.admin = body.admin;
+
+			// 		user.save(function(err) {
+			// 			if (err) return res.send(err);
+
+		 //        // return the information including token as JSON
+		 //        return res.json(getUserAndToken(user));
+			// 		});
+			// 	}
+			// });
 		});
 
 	// router.route('/authenticate')
