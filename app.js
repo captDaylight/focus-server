@@ -4,12 +4,11 @@ var favicon = require('static-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+// var assert = require('assert');
 require('dotenv').config();
 
+var mongoskin = require('mongoskin');
 var dbConfig = require('./db');
-var mongoose = require('mongoose');
-// Connect to DB
-mongoose.connect(dbConfig.url);
 
 var app = express();
 
@@ -30,8 +29,11 @@ app.use(flash());
 var routes = require('./routes/index');
 app.use('/', routes);
 
-var apiRoutes = require('./routes/api');
-app.use('/api', apiRoutes);
+// Connect to DB
+var db = mongoskin.db(dbConfig.url, {safe:true});
+var apiRoutes = require('./routes/api')(db);
+app.use('/api', apiRoutes);	
+
 
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
