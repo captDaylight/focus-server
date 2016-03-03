@@ -32,11 +32,30 @@ module.exports = function(db) {
 	// Create User
 	router.route('/user')
 		.post(function (req,res) {
-			var users = db.collection('users')
-			users.findOne({'email': req.body.email}, function(err, result) {
-				console.log('here?', err);
+			var users = db.collection('users');
+			var body = req.body;
+			users.findOne({'email': req.body.email}, function(err, user) {
+				var newUser;
 				if (err) return res.send(err);
-				console.log('result',result);
+				
+				if (user) {
+					return res.json({message: 'Email already in use'});
+				}
+				
+				var salt = bCrypt.genSaltSync(10);
+				var newUser = {
+					email: body.email,
+					password: bCrypt.hashSync(body.password, salt, null),
+					name: body.name,
+					admin: body.admin
+				};
+
+				users.insert(newUser, function(err, results) {
+					if (err) return res.send(err);
+
+					return res.json(getUserAndToken(newUser));
+				});
+
 			});
 			// User.findOne({'email': req.body.email}, function (err, user) {
 			// 	if (err) return res.send(err);
