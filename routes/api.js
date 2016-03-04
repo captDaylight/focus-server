@@ -3,9 +3,7 @@ var router = express.Router();
 var bCrypt = require('bcrypt-nodejs');
 var jwt = require('jsonwebtoken');
 var validate = require("validate.js");
-var User = require('../models/Users');
-
-console.log(!validate.single(null, {presence: true, email: true}).length);
+var userConstraints = require('../models/userConstraints');
 
 var secret = process.env.SUPER_SECRET;
 
@@ -30,6 +28,7 @@ function getUserAndToken(user) {
 }
 
 module.exports = function(db) {
+	// console.log(db.collection('users').drop());
 	// Create User
 	router.route('/user')
 		.post(function (req,res) {
@@ -40,32 +39,31 @@ module.exports = function(db) {
 				if (err) return res.send(err);
 				
 				if (user) {
-					return res.json({message: 'Email already in use'});
+					return res.json({status: false, reason: {email: 'Email already in use'}});
 				}
 
-				var emailErrs = validate.single(body.email, {
-					presence: true, 
-					email: true
-				});
-				console.log('????', emailErrs);
-				if (!!emailErrs) {
-					return res.json({message: emailErrs[0]});
-				} else if (!body.password) {
-					return res.json({message: 'Password can\'t be empty.'});
+				var errors = validate({
+					email: body.email, 
+					password: body.password
+				}, userConstraints)
+				
+				if (!!errors) {
+					return res.json({status: false, reason: errors});
 				}
-				var salt = bCrypt.genSaltSync(10);
-				var newUser = {
-					email: body.email,
-					password: bCrypt.hashSync(body.password, salt, null),
-					name: body.name,
-					admin: body.admin
-				};
 
-				users.insert(newUser, function(err, results) {
-					if (err) return res.send(err);
+				// var salt = bCrypt.genSaltSync(10);
+				// var newUser = {
+				// 	email: body.email,
+				// 	password: bCrypt.hashSync(body.password, salt, null),
+				// 	name: body.name,
+				// 	admin: body.admin
+				// };
 
-					return res.json(getUserAndToken(newUser));
-				});
+				// users.insert(newUser, function(err, results) {
+				// 	if (err) return res.send(err);
+
+				// 	return res.json(getUserAndToken(newUser));
+				// });
 
 			});
 		});
