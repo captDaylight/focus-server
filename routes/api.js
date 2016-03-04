@@ -51,19 +51,19 @@ module.exports = function(db) {
 					return res.json({status: false, reason: errors});
 				}
 
-				// var salt = bCrypt.genSaltSync(10);
-				// var newUser = {
-				// 	email: body.email,
-				// 	password: bCrypt.hashSync(body.password, salt, null),
-				// 	name: body.name,
-				// 	admin: body.admin
-				// };
+				var salt = bCrypt.genSaltSync(10);
+				var newUser = {
+					email: body.email,
+					password: bCrypt.hashSync(body.password, salt, null),
+					name: body.name,
+					admin: body.admin
+				};
 
-				// users.insert(newUser, function(err, results) {
-				// 	if (err) return res.send(err);
+				users.insert(newUser, function(err, results) {
+					if (err) return res.send(err);
 
-				// 	return res.json(getUserAndToken(newUser));
-				// });
+					return res.json(getUserAndToken(newUser));
+				});
 
 			});
 		});
@@ -88,32 +88,32 @@ module.exports = function(db) {
 			});
 		});
 
-	// // route middleware to verify a token
-	// router.use(function(req, res, next) {
-	//   // check header or url parameters or post parameters for token
-	//   var token = req.body.token || req.query.token || req.headers['x-access-token'];
-	//   console.log('token?', req.body, token);
-	//   // decode token
-	//   if (token) {
-	//     // verifies secret and checks exp
-	//     jwt.verify(token, secret, function(err, decoded) {      
-	//       if (err) {
-	//         return res.json({ 
-	//         	success: false, 
-	//         	message: 'Failed to authenticate token.' 
-	//         });
-	//       } else {
-	//         req.decoded = decoded;    
-	//         next();
-	//       }
-	//     });
-	//   } else {
-	//     return res.status(403).send({ 
-	//         success: false, 
-	//         message: 'No token provided.' 
-	//     });
-	//   }
-	// });
+	// route middleware to verify a token
+	router.use(function(req, res, next) {
+	  // check header or url parameters or post parameters for token
+	  var token = req.body.token || req.query.token || req.headers['x-access-token'];
+
+	  // decode token
+	  if (token) {
+	    // verifies secret and checks exp
+	    jwt.verify(token, secret, function(err, decoded) {      
+	      if (err) {
+	        return res.json({ 
+	        	success: false, 
+	        	message: 'Failed to authenticate token.' 
+	        });
+	      } else {
+	        req.decoded = decoded;    
+	        next();
+	      }
+	    });
+	  } else {
+	    return res.status(403).send({ 
+	        success: false, 
+	        message: 'No token provided.' 
+	    });
+	  }
+	});
 
 
 	// function addWebsiteToUser(res, user, id) {
