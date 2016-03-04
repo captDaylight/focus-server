@@ -2,9 +2,10 @@ var express = require('express');
 var router = express.Router();
 var bCrypt = require('bcrypt-nodejs');
 var jwt = require('jsonwebtoken');
-// var Todo = require('../models/Todos');
+var validate = require("validate.js");
 var User = require('../models/Users');
-// var Website = require('../models/Websites');
+
+console.log(!validate.single(null, {presence: true, email: true}).length);
 
 var secret = process.env.SUPER_SECRET;
 
@@ -34,14 +35,24 @@ module.exports = function(db) {
 		.post(function (req,res) {
 			var users = db.collection('users');
 			var body = req.body;
-			users.findOne({'email': req.body.email}, function(err, user) {
+			users.findOne({'email': body.email}, function(err, user) {
 				var newUser;
 				if (err) return res.send(err);
 				
 				if (user) {
 					return res.json({message: 'Email already in use'});
 				}
-				
+
+				var emailErrs = validate.single(body.email, {
+					presence: true, 
+					email: true
+				});
+				console.log('????', emailErrs);
+				if (!!emailErrs) {
+					return res.json({message: emailErrs[0]});
+				} else if (!body.password) {
+					return res.json({message: 'Password can\'t be empty.'});
+				}
 				var salt = bCrypt.genSaltSync(10);
 				var newUser = {
 					email: body.email,
@@ -57,51 +68,27 @@ module.exports = function(db) {
 				});
 
 			});
-			// User.findOne({'email': req.body.email}, function (err, user) {
-			// 	if (err) return res.send(err);
-
-			// 	if (user) {
-			// 		// user already exists
-			// 		return res.json({message: 'Email already in use'});
-
-			// 	} else {
-			// 		// create user
-			// 		var user = new User();
-			// 		var body = req.body;
-			// 		var salt = bCrypt.genSaltSync(10);
-
-			// 		user.email = body.email;
-			// 		user.password = bCrypt.hashSync(body.password, salt, null);
-			// 		user.name = body.name;
-			// 		user.admin = body.admin;
-
-			// 		user.save(function(err) {
-			// 			if (err) return res.send(err);
-
-		 //        // return the information including token as JSON
-		 //        return res.json(getUserAndToken(user));
-			// 		});
-			// 	}
-			// });
 		});
 
-	// router.route('/authenticate')
-	// 	.post(function (req, res) {
-	// 		User.findOne({'email': req.body.email}, function (err, user) {
-	// 			if (err) return res.send(err);
+	router.route('/authenticate')
+		.post(function (req, res) {
+			var users = db.collection('users');
+			var body = req.body;
+			users.findOne({'email': body.email}, function(err, user) {
+				if (err) return res.send(err);
 
-	// 			if (!user) {
-	// 				return res.json({message: 'User not found'});
-	// 			}
+				if (!user) {
+					return res.json({message: 'User not found'});
+				}
 
-	// 			if (!bCrypt.compareSync(req.body.password, user.password)) {
-	// 				return res.json({message: 'Invalid password'});
-	// 			}
+				if (!bCrypt.compareSync(body.password, user.password)) {
+					return res.json({message: 'Invalid password'});
+				}
 
-	// 			// TODO return token and abrieviated user
-	// 			return res.json(getUserAndToken(user));
-	// 		});
-	// 	});
+				// TODO return token and abrieviated user
+				return res.json(getUserAndToken(user));
+			});
+		});
 
 	// // route middleware to verify a token
 	// router.use(function(req, res, next) {

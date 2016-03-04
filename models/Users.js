@@ -1,13 +1,16 @@
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
+// var validate = require("validate.js");
 
-var UserSchema = Schema({
-	email: String,
-	password: String,
-	name: String,
-	admin: Boolean,
-	websites: [String],
-	todos: [],
-});
+// var userConstraints = {
+// 	email: {
+// 		presence: true
+// 	},
+// 	password: {
+// 		presence: true,
+// 		length: {
+// 			minimum: 6,
+// 			message: 'must be at least 6 characters.'
+// 		}
+// 	}
+// };
 
-module.exports = mongoose.model('Users', UserSchema);
+// module.exports = userConstraints;
