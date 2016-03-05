@@ -76,11 +76,11 @@ module.exports = function(db) {
 				if (err) return res.send(err);
 
 				if (!user) {
-					return res.json({message: 'User not found'});
+					return res.json({status: false, reason: 'User not found'});
 				}
 
 				if (!bCrypt.compareSync(body.password, user.password)) {
-					return res.json({message: 'Invalid password'});
+					return res.json({status:false, reason: 'Invalid password'});
 				}
 
 				// TODO return token and abrieviated user
@@ -99,8 +99,8 @@ module.exports = function(db) {
 	    jwt.verify(token, secret, function(err, decoded) {      
 	      if (err) {
 	        return res.json({ 
-	        	success: false, 
-	        	message: 'Failed to authenticate token.' 
+	        	status: false, 
+	        	reason: 'Failed to authenticate token.' 
 	        });
 	      } else {
 	        req.decoded = decoded;    
@@ -109,73 +109,109 @@ module.exports = function(db) {
 	    });
 	  } else {
 	    return res.status(403).send({ 
-	        success: false, 
-	        message: 'No token provided.' 
+	        status: false, 
+	        reason: 'No token provided.' 
 	    });
 	  }
 	});
 
 
-	// function addWebsiteToUser(res, user, id) {
-	// 	console.log(user.websites, typeof id);
-	// 	user.websites = user.websites.concat(id);
-	// 	user.save(function(err, user) {
-	// 		if (err) res.send(err);
-	// 	});
-	// }
-	// router.route('/websites')
-	// 	.post(function (req, res) {
-	// 		var userEmail = req.decoded.email;
-	// 		Website.findOne({name: req.body.name}, function (err, website) {
-	// 			if (err) return res.send(err);
+	function addWebsiteToUser(res, user, id) {
+		console.log(user.websites, typeof id);
+		user.websites = user.websites.concat(id);
+		user.save(function(err, user) {
+			if (err) res.send(err);
+		});
+	}
+	router.route('/websites')
+		.post(function (req, res) {
+			var websites = db.collection('websites');
+			var body = req.body;
+
+			websites.findOne({url: body.url}, function(err, website) {
+				if (err) return res.send(err);
+
+				var userEmail = req.decoded.email;
+				var users = db.collection('users');
+
+				return users.findOne({email: userEmail}, function (err, website) {
+					if (err) return res.send(err);
+
+					if (!user) {
+						return res.json({
+							status: false, 
+							reason: 'User not found with ' + req.body.email
+						});
+					} 
+
+					if (website) {
+
+					} else {
+						var newWebsite = {
+							url: body.url,
+							favicon: body.favicon
+						};
+
+						websites.insert(newWebsite, function(err, results) {
+							if (err) return res.send(err);
+							console.log(results);
+							// return res.json({status: true, })
+						});
+					}
+				})
+			});
+
+			var userEmail = req.decoded.email;
+			// Website.findOne({name: req.body.name}, function (err, website) {
+			// 	if (err) return res.send(err);
 				
-	// 			var queryWebsite = website;
+			// 	var queryWebsite = website;
 
-	// 			return User.findOne({'email': userEmail}, function (err, user) {
-	// 				if (err) return res.send(err);
+			// 	return User.findOne({'email': userEmail}, function (err, user) {
+			// 		if (err) return res.send(err);
 
-	// 				if (!user) {
-	// 					return res.json({message: 'User not found with ' + req.body.email});
-	// 				}
-	// 				if (queryWebsite) {
-	// 					// website already exists
-	// 					addWebsiteToUser(res, user, queryWebsite._id);
-	// 					res.json({success: true, website: queryWebsite});
+			// 		if (!user) {
+			// 			return res.json({message: 'User not found with ' + req.body.email});
+			// 		}
+			// 		if (queryWebsite) {
+			// 			// website already exists
+			// 			addWebsiteToUser(res, user, queryWebsite._id);
+			// 			res.json({success: true, website: queryWebsite});
 						
-	// 				} else {
-	// 					var website = new Website();
-	// 					var body = req.body;
+			// 		} else {
+			// 			var website = new Website();
+			// 			var body = req.body;
 
-	// 					website.name = body.name;
-	// 					website.favicon = body.favicon;
+			// 			website.name = body.name;
+			// 			website.favicon = body.favicon;
 
-	// 					website.save(function (err) {
-	// 						if (err) return res.send(err);
-	// 						addWebsiteToUser(res, user, website._id);
-	// 						return res.json({success: true, website: website});
-	// 					});
-	// 				}
+			// 			website.save(function (err) {
+			// 				if (err) return res.send(err);
+			// 				addWebsiteToUser(res, user, website._id);
+			// 				return res.json({success: true, website: website});
+			// 			});
+			// 		}
 
-	// 				return user
-	// 			});
-	// 		});
-	// 	})
-	// 	.get(function (req, res) {
-	// 		User.findOne({'email': req.decoded.email}, function (err, user) {
-	// 			if (err) return res.send(err);
+			// 		return user
+			// 	});
+			// });
+		})
+		// .get(function (req, res) {
+		// 	User.findOne({'email': req.decoded.email}, function (err, user) {
+		// 		if (err) return res.send(err);
 
-	// 			if (!user) {
-	// 				return res.json({message: 'User not found with ' + req.body.email});
-	// 			}
+		// 		if (!user) {
+		// 			return res.json({message: 'User not found with ' + req.body.email});
+		// 		}
 
-	// 			Website.find({'_id': {
-	// 				$in: user.websites
-	// 			}}, function(err, websites) {
-	// 				if (err) return res.send(err);
-	// 				return res.json({success: true, websites: websites});
-	// 			});
-	// 		});
-	// 	})
+		// 		Website.find({'_id': {
+		// 			$in: user.websites
+		// 		}}, function(err, websites) {
+		// 			if (err) return res.send(err);
+		// 			return res.json({success: true, websites: websites});
+		// 		});
+		// 	});
+		// })
 
 	// // TODOS
 	// router.route('/todos')
