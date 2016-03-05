@@ -5,6 +5,17 @@ var jwt = require('jsonwebtoken');
 var validate = require("validate.js");
 var userConstraints = require('../models/userConstraints');
 
+// RESULTS FORMAT
+// results { result: { ok: 1, n: 1 },
+//   ops: 
+//    [ { email: 'paul@paaoeuul.paul',
+//        password: '$2a$10$RkLHR9q4tw2349NHigcH.e8LjuRvgEye9A5x/x6Wk5cBdJPneQnBO',
+//        name: undefined,
+//        admin: undefined,
+//        _id: 56db01b1652acfc20d8ed08a } ],
+//   insertedCount: 1,
+//   insertedIds: [ 56db01b1652acfc20d8ed08a ] }
+
 var secret = process.env.SUPER_SECRET;
 
 router.get('/', function(req, res) {
@@ -21,7 +32,7 @@ function getUserAndToken(user) {
   });
 
   return {
-	  success: true,
+	  status: true,
 	  token: token,
 	  user: newUser
 	}
@@ -61,7 +72,7 @@ module.exports = function(db) {
 
 				users.insert(newUser, function(err, results) {
 					if (err) return res.send(err);
-
+					console.log('results', results);
 					return res.json(getUserAndToken(newUser));
 				});
 
@@ -134,34 +145,46 @@ module.exports = function(db) {
 				var userEmail = req.decoded.email;
 				var users = db.collection('users');
 
-				return users.findOne({email: userEmail}, function (err, website) {
-					if (err) return res.send(err);
+				if (website) {
+					console.log('website already exists', website._id);
+					users.update({email: userEmail}, {$addToSet: {websitesIDs: website._id}});
+					users.findOne({email: userEmail}, function(err, user){
+						console.log(user);
+					});
+					return res.json({status: true, data: {website: website}})
+				} else {
+					var newWebsite = {
+						url: body.url,
+						favicon: body.favicon
+					};
 
-					if (!user) {
-						return res.json({
-							status: false, 
-							reason: 'User not found with ' + req.body.email
+					websites.insert(newWebsite, function(err, results) {
+						if (err) return res.send(err);
+						users.update({email: userEmail}, {
+							$addToSet: {websitesIDs: results.insertedIds[0]}
 						});
-					} 
-
-					if (website) {
-
-					} else {
-						var newWebsite = {
-							url: body.url,
-							favicon: body.favicon
-						};
-
-						websites.insert(newWebsite, function(err, results) {
-							if (err) return res.send(err);
-							console.log(results);
-							// return res.json({status: true, })
+						users.findOne({email: userEmail}, function(err, user){
+							console.log(user);
 						});
-					}
-				})
+						return res.json({status: true, data: {
+							website: results.ops[0]
+						}})
+					});
+				}
+
+				// return users.findOne({email: userEmail}, function (err, user) {
+				// 	if (err) return res.send(err);
+
+				// 	if (!user) {
+				// 		return res.json({
+				// 			status: false, 
+				// 			reason: 'User not found with ' + req.body.email
+				// 		});
+				// 	} 
+
+				// })
 			});
 
-			var userEmail = req.decoded.email;
 			// Website.findOne({name: req.body.name}, function (err, website) {
 			// 	if (err) return res.send(err);
 				
