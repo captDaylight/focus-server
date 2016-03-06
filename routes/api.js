@@ -4,6 +4,7 @@ var bCrypt = require('bcrypt-nodejs');
 var jwt = require('jsonwebtoken');
 var validate = require("validate.js");
 var userConstraints = require('../models/userConstraints');
+var ObjectId = require('mongodb').ObjectID;
 
 // RESULTS FORMAT
 // results { result: { ok: 1, n: 1 },
@@ -150,19 +151,20 @@ module.exports = function(db) {
 
 				if (website) {
 					// if the website already exists
-					users.update({email: userEmail}, {$addToSet: {websitesIDs: website._id}});
+					users.update({email: userEmail}, {$addToSet: {websiteIDs: website._id}});
 					return res.json({status: true, data: {website: website}});
 				} else {
 					// create a new website
 					var newWebsite = {
 						url: body.url,
-						favicon: body.favicon
+						favicon: body.favicon,
+						common: body.common === 'true' ? true : false, // sites for initial load
 					};
 
 					websites.insert(newWebsite, function(err, results) {
 						if (err) return res.send(err);
 						users.update({email: userEmail}, {
-							$addToSet: {websitesIDs: results.insertedIds[0]}
+							$addToSet: {websiteIDs: results.insertedIds[0]}
 						});
 						return res.json({status: true, data: {
 							website: results.ops[0]
@@ -174,26 +176,43 @@ module.exports = function(db) {
 		.get(function (req, res) {
 			var userEmail = req.decoded.email;
 			var users = db.collection('users');
-			
 
 			// get user
 			users.findOne({'email': userEmail}, function(err, user) {
 				if (err) return res.send(err);
 				// get all website ids
-				var ids = user.websitesIDs;
+				var ids = user.websiteIDs;
 				var websites = db.collection('websites');
+				
+				if (!user.websiteIDs) {
+					return res.json({status: true, data: { websites: [] }});
+				}
 
 				// get list of all blocked websites
 				websites.find({'_id': {'$in': ids}}).toArray(function(err, websites) {
 					if (err) return res.send(err);
+					
 					return res.json({status: true, data: { websites: websites }})
 				});
-				
 			});
 		})
-
 		// remove a website
-
+		router.route('/websites/:id')
+			.delete(function (req, res) {
+				var userEmail = req.decoded.email;
+				var users = db.collection('users');
+				console.log(req.params.id);
+				users.updateOne({'email': userEmail}, {
+					'$pull': {
+						'websiteIDs': {
+							'$in': [ObjectId(req.params.id)]
+						}
+					}
+				}, function(err, results) {
+					if (err) return res.send(err);
+					return res.json({status: true, data: {id: req.params.id}})
+				});
+			});
 
 	// // TODOS
 	// router.route('/todos')
