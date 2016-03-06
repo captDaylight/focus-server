@@ -197,54 +197,51 @@ module.exports = function(db) {
 			});
 		})
 		// remove a website
-		router.route('/websites/:id')
+		router.route('/websites/:website_id')
 			.delete(function (req, res) {
 				var userEmail = req.decoded.email;
 				var users = db.collection('users');
-				console.log(req.params.id);
+
 				users.updateOne({'email': userEmail}, {
 					'$pull': {
 						'websiteIDs': {
-							'$in': [ObjectId(req.params.id)]
+							'$in': [ObjectId(req.params.website_id)]
 						}
 					}
 				}, function(err, results) {
 					if (err) return res.send(err);
-					return res.json({status: true, data: {id: req.params.id}})
+					return res.json({status: true, data: {id: req.params.website_id}})
 				});
 			});
 
-	// // TODOS
-	// router.route('/todos')
-	// 	.post(function (req, res) {
-	// 		// create a todo
-	// 		var todo = new Todo();
-	// 		var body = req.body;
 
-	// 		todo.todo = body.todo;
-	// 		todo.created = body.created;
-	// 		todo.completed = body.completed;
-	// 		todo.workingOn = body.workingOn;
-	// 		todo.editing = body.editing;
+	//////////////////////////////
+	// TODOS
+	//////////////////////////////
+	router.route('/todos')
+		.post(function (req, res) {
+			
+		})
+		.get(function (req, res) {
+			// get uncompleted todos
+			var userEmail = req.decoded.email;
+			var users = db.collection('users');
 
-	// 		todo.save(function (err) {
-	// 			if (err) return res.send(err);
+			users.findOne({'email': userEmail}, function(err, user) {
+				if (err) return res.send(err);
 
-	// 			return res.json({success: true, todo: todo});
-	// 		});
-	// 	})
-	// 	.get(function (req, res) {
-	// 		Todo.find(function (err, todos) {
-	// 			if (err) return res.send(err);
+				if (!user.todos) {
+					return res.json({status: true, data: { todos: []}});
+				}
 
-	// 			return res.json(todos);
-	// 		});
-	// 	});
+				return res.json({status: true, data: { todos: user.todos }});
+			});
+		});
+	router.route('/todos/:todo_id')
+		.get()
+		.put()
+		.delete();
+	
 
-	// router.route('/todos/:todo_id')
-	// 	.get()
-	// 	.put()
-	// 	.delete();
-	console.log('returning router');
 	return router;
 }
