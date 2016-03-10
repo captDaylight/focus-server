@@ -100,6 +100,25 @@ module.exports = function(db) {
 			});
 		});
 
+	router.route('/websites/common')
+		.get(function (req, res) {
+			var websites = db.collection('websites');
+			var body = req.body;
+
+			console.log('websitess');
+			websites.find({'common': true}).toArray(function(err, websites) {
+				if (err) return res.send(err);
+				
+				return res.json({status: true, data: { websites: websites }});
+			});
+		});
+	
+	//////////////////////////////
+	//////////////////////////////
+	// AUTHENTICATED
+	//////////////////////////////
+	//////////////////////////////
+
 	// route middleware to verify a token
 	router.use(function(req, res, next) {
 	  // check header or url parameters or post parameters for token
@@ -196,23 +215,25 @@ module.exports = function(db) {
 				});
 			});
 		})
-		// remove a website
-		router.route('/websites/:website_id')
-			.delete(function (req, res) {
-				var userEmail = req.decoded.email;
-				var users = db.collection('users');
+	// remove a website
+	router.route('/websites/:website_id')
+		.delete(function (req, res) {
+			var userEmail = req.decoded.email;
+			var users = db.collection('users');
 
-				users.updateOne({'email': userEmail}, {
-					'$pull': {
-						'websiteIDs': {
-							'$in': [ObjectId(req.params.website_id)]
-						}
+			users.updateOne({'email': userEmail}, {
+				'$pull': {
+					'websiteIDs': {
+						'$in': [ObjectId(req.params.website_id)]
 					}
-				}, function(err, results) {
-					if (err) return res.send(err);
-					return res.json({status: true, data: {id: req.params.website_id}})
-				});
+				}
+			}, function(err, results) {
+				if (err) return res.send(err);
+				return res.json({status: true, data: {id: req.params.website_id}})
 			});
+		});
+
+
 
 
 	//////////////////////////////
