@@ -99,19 +99,6 @@ module.exports = function(db) {
 				return res.json(getUserAndToken(user));
 			});
 		});
-
-	router.route('/websites/common')
-		.get(function (req, res) {
-			var websites = db.collection('websites');
-			var body = req.body;
-
-			console.log('websitess');
-			websites.find({'common': true}).toArray(function(err, websites) {
-				if (err) return res.send(err);
-				
-				return res.json({status: true, data: { websites: websites }});
-			});
-		});
 	
 	//////////////////////////////
 	//////////////////////////////
@@ -149,7 +136,19 @@ module.exports = function(db) {
 	//////////////////////////////
 	// WEBSITES
 	//////////////////////////////
-	
+
+	router.route('/websites/common')
+		.get(function (req, res) {
+			var websites = db.collection('websites');
+			var body = req.body;
+
+			websites.find({'common': true}).toArray(function(err, websites) {
+				if (err) return res.send(err);
+				
+				return res.json({status: true, data: { websites: websites }});
+			});
+		});
+
 	function addWebsiteToUser(res, user, id) {
 		console.log(user.websites, typeof id);
 		user.websites = user.websites.concat(id);
@@ -215,7 +214,7 @@ module.exports = function(db) {
 				});
 			});
 		})
-	// remove a website
+	// delete a website
 	router.route('/websites/:website_id')
 		.delete(function (req, res) {
 			var userEmail = req.decoded.email;
@@ -262,7 +261,29 @@ module.exports = function(db) {
 		.get()
 		.put()
 		.delete();
-	
+
+
+	//////////////////////////////
+	// SESSIONS
+	//////////////////////////////
+	router.route('/sessions')
+		.post()
+		.get(function (req, res) {
+			// get list of sessions
+			var userEmail = req.decoded.email;
+			var users = db.collection('users');
+
+			users.findOne({'email': userEmail}, function(err, user) {
+				if (err) return res.send(err);
+
+				if (!user.sessions) {
+					return res.json({status: true, data: { todos: []}});
+				}
+
+				//TODO send the latest sessions
+				// return res.json({status: true, data: { todos: user.todos }});
+			});
+		})
 
 	return router;
 }
