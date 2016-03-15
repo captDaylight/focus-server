@@ -150,7 +150,6 @@ module.exports = function(db) {
 		});
 
 	function addWebsiteToUser(res, user, id) {
-		console.log(user.websites, typeof id);
 		user.websites = user.websites.concat(id);
 		user.save(function(err, user) {
 			if (err) res.send(err);
@@ -233,8 +232,6 @@ module.exports = function(db) {
 		});
 
 
-
-
 	//////////////////////////////
 	// TODOS
 	//////////////////////////////
@@ -267,23 +264,43 @@ module.exports = function(db) {
 	// SESSIONS
 	//////////////////////////////
 	router.route('/sessions')
-		.post()
-		.get(function (req, res) {
-			// get list of sessions
+		.post(function (req, res) {
 			var userEmail = req.decoded.email;
 			var users = db.collection('users');
 
-			users.findOne({'email': userEmail}, function(err, user) {
+			var newSession = {
+				start: req.body.start,
+				end: req.body.end
+			}
+
+			users.update({email: userEmail}, {
+				$addToSet: {sessions: newSession}
+			}, function(err, results) {
 				if (err) return res.send(err);
 
-				if (!user.sessions) {
-					return res.json({status: true, data: { todos: []}});
-				}
-
-				//TODO send the latest sessions
-				// return res.json({status: true, data: { todos: user.todos }});
+				console.log('results', results);
 			});
+
+
 		})
+		// .get(function (req, res) {
+		// 	// get list of sessions
+		// 	var userEmail = req.decoded.email;
+		// 	var users = db.collection('users');
+
+		// 	users.findOne({'email': userEmail}, function(err, user) {
+		// 		if (err) return res.send(err);
+
+		// 		if (!user.sessions) {
+		// 			return res.json({status: true, data: { todos: []}});
+		// 		}
+
+		// 		//TODO send the latest sessions
+		// 		// return res.json({status: true, data: { todos: user.todos }});
+
+
+		// 	});
+		// })
 
 	return router;
 }
