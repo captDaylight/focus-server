@@ -279,28 +279,21 @@ module.exports = function(db) {
 				if (err) return res.send(err);
 
 				console.log('results', results);
+
+				return res.json({status: true, data: results});
 			});
-
-
 		})
-		// .get(function (req, res) {
-		// 	// get list of sessions
-		// 	var userEmail = req.decoded.email;
-		// 	var users = db.collection('users');
+		.get(function (req, res) {
+			// get list of sessions
+			var userEmail = req.decoded.email;
+			var users = db.collection('users');
 
-		// 	users.findOne({'email': userEmail}, function(err, user) {
-		// 		if (err) return res.send(err);
+			users.findOne({'email': userEmail}, function(err, user) {
+				if (err) return res.send(err);
 
-		// 		if (!user.sessions) {
-		// 			return res.json({status: true, data: { todos: []}});
-		// 		}
-
-		// 		//TODO send the latest sessions
-		// 		// return res.json({status: true, data: { todos: user.todos }});
-
-
-		// 	});
-		// })
+				return res.json({status: true, data: {sessions: user.sessions}});
+			});
+		})
 
 	return router;
 }
