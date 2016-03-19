@@ -5,7 +5,7 @@ var jwt = require('jsonwebtoken');
 var validate = require("validate.js");
 var userConstraints = require('../models/userConstraints');
 var ObjectId = require('mongodb').ObjectID;
-
+var shortid = require('shortid');
 // RESULTS FORMAT
 // results { result: { ok: 1, n: 1 },
 //   ops: 
@@ -270,17 +270,16 @@ module.exports = function(db) {
 
 			var newSession = {
 				start: req.body.start,
-				end: req.body.end
+				end: req.body.end,
+				_id: shortid.generate()
 			}
-
+			console.log('typeof ', req.body.start, typeof req.body.start);
 			users.update({email: userEmail}, {
 				$addToSet: {sessions: newSession}
 			}, function(err, results) {
 				if (err) return res.send(err);
 
-				console.log('results', results);
-
-				return res.json({status: true, data: results});
+				return res.json({status: true, data: newSession});
 			});
 		})
 		.get(function (req, res) {
