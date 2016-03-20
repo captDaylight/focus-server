@@ -260,6 +260,10 @@ module.exports = function(db) {
 		.delete();
 
 
+	function checkIfNum(val) {
+		return typeof val === 'number' ? val : parseInt(val)
+	}
+
 	//////////////////////////////
 	// SESSIONS
 	//////////////////////////////
@@ -267,10 +271,12 @@ module.exports = function(db) {
 		.post(function (req, res) {
 			var userEmail = req.decoded.email;
 			var users = db.collection('users');
+			var start = req.body.start;
+			var end = req.body.end;
 
 			var newSession = {
-				start: req.body.start,
-				end: req.body.end,
+				start: checkIfNum(start),
+				end: checkIfNum(end),
 				_id: shortid.generate()
 			}
 			console.log('typeof ', req.body.start, typeof req.body.start);
