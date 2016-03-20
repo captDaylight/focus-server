@@ -6,6 +6,7 @@ var validate = require("validate.js");
 var userConstraints = require('../models/userConstraints');
 var ObjectId = require('mongodb').ObjectID;
 var shortid = require('shortid');
+
 // RESULTS FORMAT
 // results { result: { ok: 1, n: 1 },
 //   ops: 
@@ -33,7 +34,6 @@ function getUserAndToken(user) {
   });
 
   return {
-	  status: true,
 	  token: token,
 	  user: newUser
 	}
@@ -74,7 +74,7 @@ module.exports = function(db) {
 				users.insert(newUser, function(err, results) {
 					if (err) return res.send(err);
 					console.log('results', results);
-					return res.json(getUserAndToken(newUser));
+					return res.json({status: true, data: getUserAndToken(newUser)});
 				});
 
 			});
@@ -95,8 +95,26 @@ module.exports = function(db) {
 					return res.json({status:false, reason: 'Invalid password'});
 				}
 
-				// TODO return token and abrieviated user
-				return res.json(getUserAndToken(user));
+				var ids = user.websiteIDs;
+				var websites = db.collection('websites');
+				var userAndToken = getUserAndToken(user);
+
+				if (!user.websiteIDs) {
+					return res.json({
+						status: true, 
+						data: Object.assign(userAndToken, {websites: []})
+					});
+				}
+
+				// get list of all blocked websites
+				websites.find({'_id': {'$in': ids}}).toArray((err, websites) => {
+					return res.json({
+						status: true,
+						data: Object.assign(getUserAndToken(user), {websites: websites})	
+					});
+				});
+
+				
 			});
 		});
 	
@@ -279,13 +297,13 @@ module.exports = function(db) {
 				end: checkIfNum(end),
 				_id: shortid.generate()
 			}
-			console.log('typeof ', req.body.start, typeof req.body.start);
+			
 			users.update({email: userEmail}, {
 				$addToSet: {sessions: newSession}
 			}, function(err, results) {
 				if (err) return res.send(err);
 
-				return res.json({status: true, data: newSession});
+				return res.json({status: true, data: {session: newSession}});
 			});
 		})
 		.get(function (req, res) {
@@ -302,3 +320,4 @@ module.exports = function(db) {
 
 	return router;
 }
+
