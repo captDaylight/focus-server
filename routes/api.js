@@ -6,6 +6,7 @@ var validate = require("validate.js");
 var userConstraints = require('../models/userConstraints');
 var ObjectId = require('mongodb').ObjectID;
 var shortid = require('shortid');
+var favicon = require('favicon');
 
 // RESULTS FORMAT
 // results { result: { ok: 1, n: 1 },
@@ -113,8 +114,6 @@ module.exports = function(db) {
 						data: Object.assign(getUserAndToken(user), {websites: websites})	
 					});
 				});
-
-				
 			});
 		});
 	
@@ -192,18 +191,23 @@ module.exports = function(db) {
 					// create a new website
 					var newWebsite = {
 						url: body.url,
-						favicon: body.favicon,
 						common: body.common === 'true' ? true : false, // sites for initial load
 					};
 
-					websites.insert(newWebsite, function(err, results) {
+					favicon("http://nodejs.org/", function(err, favicon_url) {
 						if (err) return res.send(err);
-						users.update({email: userEmail}, {
-							$addToSet: {websiteIDs: results.insertedIds[0]}
+						console.log('GOT THE FAVICON', favicon_url);
+						newWebsite.favicon = favicon_url;
+
+						websites.insert(newWebsite, function(err, results) {
+							if (err) return res.send(err);
+							users.update({email: userEmail}, {
+								$addToSet: {websiteIDs: results.insertedIds[0]}
+							});
+							return res.json({status: true, data: {
+								website: results.ops[0]
+							}})
 						});
-						return res.json({status: true, data: {
-							website: results.ops[0]
-						}})
 					});
 				}
 			});
@@ -289,12 +293,11 @@ module.exports = function(db) {
 		.post(function (req, res) {
 			var userEmail = req.decoded.email;
 			var users = db.collection('users');
-			var start = req.body.start;
-			var end = req.body.end;
 
 			var newSession = {
-				start: checkIfNum(start),
-				end: checkIfNum(end),
+				start: checkIfNum(req.body.start),
+				end: checkIfNum(req.body.end),
+				duration: checkIfNum(req.body.duration),
 				_id: shortid.generate()
 			}
 			
