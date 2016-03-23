@@ -177,7 +177,7 @@ module.exports = function(db) {
 			var websites = db.collection('websites');
 			var body = req.body;
 
-			websites.findOne({url: body.url}, function(err, website) {
+			websites.findOne({url: body.parsedURL}, function(err, website) {
 				if (err) return res.send(err);
 
 				var userEmail = req.decoded.email;
@@ -190,13 +190,12 @@ module.exports = function(db) {
 				} else {
 					// create a new website
 					var newWebsite = {
-						url: body.url,
+						url: body.parsedURL,
 						common: body.common === 'true' ? true : false, // sites for initial load
 					};
-
-					favicon("http://nodejs.org/", function(err, favicon_url) {
+					favicon(body.rawURL, function(err, favicon_url) {
 						if (err) return res.send(err);
-						console.log('GOT THE FAVICON', favicon_url);
+						console.log(err, favicon_url);
 						newWebsite.favicon = favicon_url;
 
 						websites.insert(newWebsite, function(err, results) {
