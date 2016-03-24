@@ -258,7 +258,20 @@ module.exports = function(db) {
 	//////////////////////////////
 	router.route('/todos')
 		.post(function (req, res) {
+			var userEmail = req.decoded.email;
+			var users = db.collection('users');
+
+			var newTodo = {
+
+			}
 			
+			users.update({email: userEmail}, {
+				$addToSet: {todos: newTodo}
+			}, function(err, results) {
+				if (err) return res.send(err);
+
+				return res.json({status: true, data: {todo: newTodo}});
+			});
 		})
 		.get(function (req, res) {
 			// get uncompleted todos
