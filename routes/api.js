@@ -262,14 +262,16 @@ module.exports = function(db) {
 			var users = db.collection('users');
 
 			var newTodo = {
-
+				text: req.body.text,
+				created: req.body.created,
+				completed: null
 			}
 			
 			users.update({email: userEmail}, {
 				$addToSet: {todos: newTodo}
 			}, function(err, results) {
 				if (err) return res.send(err);
-
+				console.log('adding new todo', newTodo);
 				return res.json({status: true, data: {todo: newTodo}});
 			});
 		})
@@ -288,7 +290,7 @@ module.exports = function(db) {
 				return res.json({status: true, data: { todos: user.todos }});
 			});
 		});
-	router.route('/todos/:todo_id')
+	router.route('/todos/:created')
 		.get()
 		.put()
 		.delete();
