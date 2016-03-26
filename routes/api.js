@@ -311,10 +311,11 @@ module.exports = function(db) {
 
 				// if completed, move to completed array
 				if ('completed' in req.body) {
-					todo = _.find(users.todos, function (todo) {
+					todo = _.find(user.todos, function (todo) {
+						console.log(todo.created, req.params.created);
 						return todo.created === req.params.created;
 					});
-	
+					console.log('TODO', todo);
 					users.update({email: userEmail}, {
 						$pull: {todos: {created: req.params.created}},
 						$addToSet: {completedTodos: todo}
@@ -326,13 +327,13 @@ module.exports = function(db) {
 					});
 				}
 
-				var todo = _.find(user.todos, function (todo) {
-					return todo.created === req.params.created;
-				});
+				// var todo = _.find(user.todos, function (todo) {
+				// 	return todo.created === req.params.created;
+				// });
 				
-				console.log(todo);
+				// console.log(todo);
 				
-				return res.json({status: true, data: { todos: [] }});
+				// return res.json({status: true, data: { todos: [] }});
 			});
 		})
 		.delete();
