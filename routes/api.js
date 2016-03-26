@@ -7,6 +7,7 @@ var userConstraints = require('../models/userConstraints');
 var ObjectId = require('mongodb').ObjectID;
 var shortid = require('shortid');
 var favicon = require('favicon');
+var _ = require('lodash');
 
 // RESULTS FORMAT
 // results { result: { ok: 1, n: 1 },
@@ -291,15 +292,72 @@ module.exports = function(db) {
 			});
 		});
 	router.route('/todos/:created')
-		.get()
-		.put()
+		.get(function (req, res) {
+
+		})
+		.put(function (req, res) {
+			var userEmail = req.decoded.email;
+			var users = db.collection('users');
+			console.log('created',req.params.created);
+			console.log(req.body);
+			users.findOne({'email': userEmail}, function(err, user) {
+				if (err) return res.send(err);
+				
+				var todo;
+
+				if (!user.todos) {
+					return res.json({status: false, data: { message: 'No Todos'}});
+				}
+
+				// if completed, move to completed array
+				if ('completed' in req.body) {
+					todo = _.find(users.todos, function (todo) {
+						return todo.created === req.params.created;
+					});
+	
+					users.update({email: userEmail}, {
+						$pull: {todos: {created: req.params.created}},
+						$addToSet: {completedTodos: todo}
+					}, function(err, results) {
+						if (err) return res.send(err);
+						console.log('pulling todo', todo);
+						console.log('adding to finished todos');
+						return res.json({status: true, data: {todo: todo}});
+					});
+				}
+
+				var todo = _.find(user.todos, function (todo) {
+					return todo.created === req.params.created;
+				});
+				
+				console.log(todo);
+				
+				return res.json({status: true, data: { todos: [] }});
+			});
+		})
 		.delete();
+
+	router.route('/completedtodos/')
+		.get(function (req, res) {
+			// get uncompleted todos
+			var userEmail = req.decoded.email;
+			var users = db.collection('users');
+			console.log('trying to get completed');
+			users.findOne({'email': userEmail}, function(err, user) {
+				if (err) return res.send(err);
+				console.log('user', user);
+				if (!user.completedTodos) {
+					return res.json({status: true, data: { completedTodos: []}});
+				}
+
+				return res.json({status: true, data: { completedTodos: user.completedTodos }});
+			});
+		});
 
 
 	function checkIfNum(val) {
 		return typeof val === 'number' ? val : parseInt(val)
 	}
-
 	//////////////////////////////
 	// SESSIONS
 	//////////////////////////////
