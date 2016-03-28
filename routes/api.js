@@ -298,8 +298,7 @@ module.exports = function(db) {
 		.put(function (req, res) {
 			var userEmail = req.decoded.email;
 			var users = db.collection('users');
-			console.log('created',req.params.created);
-			console.log(req.body);
+
 			users.findOne({'email': userEmail}, function(err, user) {
 				if (err) return res.send(err);
 				
@@ -308,21 +307,19 @@ module.exports = function(db) {
 				if (!user.todos) {
 					return res.json({status: false, data: { message: 'No Todos'}});
 				}
-
 				// if completed, move to completed array
 				if ('completed' in req.body) {
 					todo = _.find(user.todos, function (todo) {
-						console.log(todo.created, req.params.created);
 						return todo.created === req.params.created;
 					});
-					console.log('TODO', todo);
+
+					todo = _.merge(todo, {completed: req.body.completed});
+
 					users.update({email: userEmail}, {
 						$pull: {todos: {created: req.params.created}},
 						$addToSet: {completedTodos: todo}
 					}, function(err, results) {
 						if (err) return res.send(err);
-						console.log('pulling todo', todo);
-						console.log('adding to finished todos');
 						return res.json({status: true, data: {todo: todo}});
 					});
 				}
