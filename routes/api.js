@@ -41,7 +41,20 @@ function getUserAndToken(user) {
 	}
 }
 
+
 module.exports = function(db) {
+	function getUser(req, res, fn) {
+		// get uncompleted todos
+		var userEmail = req.decoded.email;
+		var users = db.collection('users');
+
+		users.findOne({'email': userEmail}, function(err, user) {
+			if (err) return res.send(err);
+
+			fn(user, users);
+		});
+	}
+
 	// console.log(db.collection('users').drop());
 	// Create User
 	router.route('/user')
@@ -277,13 +290,7 @@ module.exports = function(db) {
 			});
 		})
 		.get(function (req, res) {
-			// get uncompleted todos
-			var userEmail = req.decoded.email;
-			var users = db.collection('users');
-
-			users.findOne({'email': userEmail}, function(err, user) {
-				if (err) return res.send(err);
-
+			getUser(req, res, function(user) {
 				if (!user.todos) {
 					return res.json({status: true, data: { todos: []}});
 				}
@@ -333,7 +340,31 @@ module.exports = function(db) {
 				// return res.json({status: true, data: { todos: [] }});
 			});
 		})
-		.delete();
+		.delete(function(req, res) {
+			var userEmail = req.decoded.email;
+			var users = db.collection('users');
+
+			users.findOne({'email': userEmail}, function(err, user) {
+				if (err) return res.send(err);
+				console.log(user);
+
+				var i = _.findIndex(user.todos, function(t) {
+					return t.created === req.params.created;
+				})
+				
+				var query = i >= 0 
+					? {todos: {created: req.params.created}}
+					: {completedTodos: {created: req.params.created}};
+
+				users.update({email: userEmail}, {
+					$pull: query,
+				}, function(err, results) {
+					if (err) return res.send(err);
+					
+					return res.json({status: true});
+				});
+			});
+		});
 
 	router.route('/completedtodos/')
 		.get(function (req, res) {
