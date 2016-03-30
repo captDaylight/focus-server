@@ -346,7 +346,6 @@ module.exports = function(db) {
 
 			users.findOne({'email': userEmail}, function(err, user) {
 				if (err) return res.send(err);
-				console.log(user);
 
 				var i = _.findIndex(user.todos, function(t) {
 					return t.created === req.params.created;
