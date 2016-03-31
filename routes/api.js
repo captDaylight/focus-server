@@ -309,17 +309,15 @@ module.exports = function(db) {
 			users.findOne({'email': userEmail}, function(err, user) {
 				if (err) return res.send(err);
 				
-				var todo;
+				var todo = _.find(user.todos, function (todo) {
+					return todo.created === req.params.created;
+				});
 
 				if (!user.todos) {
 					return res.json({status: false, data: { message: 'No Todos'}});
 				}
 				// if completed, move to completed array
 				if ('completed' in req.body) {
-					todo = _.find(user.todos, function (todo) {
-						return todo.created === req.params.created;
-					});
-
 					todo = _.merge(todo, {completed: req.body.completed});
 
 					users.update({email: userEmail}, {
@@ -329,6 +327,15 @@ module.exports = function(db) {
 						if (err) return res.send(err);
 						return res.json({status: true, data: {todo: todo}});
 					});
+				}
+
+				if ('text' in req.body) {
+					users.update({email: userEmail, 'todos.created': req.params.created}, {
+							$set: { 'todos.$.text': req.body.text }, 
+						}, function (err, results) {
+							if (err) return res.send(err);
+							return res.json({status: true});
+						});
 				}
 
 				// var todo = _.find(user.todos, function (todo) {
