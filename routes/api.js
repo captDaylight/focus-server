@@ -22,10 +22,6 @@ var _ = require('lodash');
 
 var secret = process.env.SUPER_SECRET;
 
-router.get('/', function(req, res) {
-	res.json({message: 'OH THIS IS THE API'}); 
-});
-
 function getUserAndToken(user) {
 	var newUser = {
 		id: user._id,
@@ -163,6 +159,20 @@ module.exports = function(db) {
 	    });
 	  }
 	});
+
+	//////////////////////////////
+	// WEBSITES
+	//////////////////////////////
+	router.route('/')
+		.get(function(req, res) {
+			var userEmail = req.decoded.email;
+			var users = db.collection('users');
+
+			// get user
+			users.findOne({'email': userEmail}, function(err, user) {
+				return res.json({status: true, data: { user: user }});
+			});
+		});
 
 	//////////////////////////////
 	// WEBSITES
